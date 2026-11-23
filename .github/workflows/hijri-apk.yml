@@ -5,6 +5,9 @@ on:
     paths: ["hijri_converter/**", ".github/workflows/hijri-apk.yml"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -27,3 +30,13 @@ jobs:
         with:
           name: hijri-converter-apk
           path: hijri_converter/build/app/outputs/flutter-apk/app-release.apk
+      - name: Publish APK as a release
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk hijri-converter.apk
+          gh release delete hijri-latest --yes --cleanup-tag || true
+          gh release create hijri-latest hijri-converter.apk \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "محوّل التاريخ الهجري (أندرويد)" \
+            --notes "ملف APK للتثبيت المباشر على أندرويد. بُني من الإصدار $GITHUB_SHA."
+        env:
+          GH_TOKEN: ${{ github.token }}
